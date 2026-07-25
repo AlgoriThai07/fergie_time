@@ -25,6 +25,15 @@ class BootstrapStaticResponse(BaseModel):
     elements: List[FPLPlayer]
     teams: List[FPLTeam]
 
+class FPLFixtureStatValue(BaseModel):
+    value: int
+    element: int
+
+class FPLFixtureStat(BaseModel):
+    identifier: str
+    h: List[FPLFixtureStatValue] = []
+    a: List[FPLFixtureStatValue] = []
+
 class FPLFixture(BaseModel):
     id: int
     event: Optional[int] = None
@@ -34,6 +43,8 @@ class FPLFixture(BaseModel):
     team_a_difficulty: int
     kickoff_time: Optional[str] = None
     finished: bool
+    stats: List[FPLFixtureStat] = []
+
 
 class FPLEntry(BaseModel):
     id: int
