@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from api.squad import router as squad_router
 
 # Database and Redis URL environment variables with local defaults
 DATABASE_URL = os.getenv(
@@ -26,6 +27,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(squad_router)
 
 @app.get("/health")
 def health_check():

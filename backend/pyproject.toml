@@ -23,5 +23,6 @@ testpaths = [
     "../tests"
 ]
 pythonpath = [
-    "."
+    ".",
+    "backend"
 ]
