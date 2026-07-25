@@ -8,9 +8,11 @@ picks endpoint (/event/1/picks/) returns a 404 for everyone during pre-season.
 This script manually seeds a mock squad of 15 players for your FPL Entry ID
 in the database, allowing you to test the GET /squad/{user_id} endpoint locally.
 """
+
 import sys
+
+from db.models import Player, User, UserSquad
 from db.session import get_db_session
-from db.models import User, Player, UserSquad
 
 # Use 1160158 as default, or take from command line argument
 FPL_ENTRY_ID = 1160158
@@ -22,6 +24,7 @@ if len(sys.argv) > 1:
         sys.path.exit(1)
 
 GAMEWEEK = 1
+
 
 def seed_mock_squad():
     with get_db_session() as session:
@@ -42,7 +45,10 @@ def seed_mock_squad():
         # 3. Fetch 15 players from the database to build a squad
         players = session.query(Player).limit(15).all()
         if len(players) < 15:
-            print("Error: Not enough players in the database. Please run the ingestion task first.")
+            print(
+                "Error: Not enough players in the database. "
+                "Please run the ingestion task first."
+            )
             return
 
         # 4. Insert squad entries (11 starting, 4 bench)
@@ -57,15 +63,24 @@ def seed_mock_squad():
                 player_id=player.id,
                 is_starting=is_starting,
                 is_captain=is_captain,
-                is_vice=is_vice
+                is_vice=is_vice,
             )
             session.add(squad_entry)
-            print(f"  - Added {player.name} ({player.position}, {player.team.short_name}) - "
-                  f"{'Starting' if is_starting else 'Bench'}")
+            print(
+                f"  - Added {player.name} "
+                f"({player.position}, {player.team.short_name}) - "
+                f"{'Starting' if is_starting else 'Bench'}"
+            )
 
         session.commit()
-        print(f"\nSuccess! Mock squad seeded for FPL Entry ID {FPL_ENTRY_ID} for Gameweek {GAMEWEEK}.")
-        print(f"You can now test the API endpoint at: http://localhost:8001/squad/{FPL_ENTRY_ID}")
+        print(
+            f"\nSuccess! Mock squad seeded for FPL Entry ID {FPL_ENTRY_ID} "
+            f"for Gameweek {GAMEWEEK}."
+        )
+        print(
+            f"You can now test the API endpoint at: http://localhost:8001/squad/{FPL_ENTRY_ID}"
+        )
+
 
 if __name__ == "__main__":
     seed_mock_squad()

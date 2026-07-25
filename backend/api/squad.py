@@ -7,13 +7,14 @@ and starting/bench/captain status.
 If no squad is found in user_squads for the user, fetches it live from the
 FPL API via get_entry_picks(), persists it, then returns it.
 """
+
 import logging
-from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from db.models import Player, Team, User, UserSquad
 from db.session import get_db_session
-from db.models import User, Player, Team, UserSquad
 from ingestion.fpl_client import FPLClient
 
 logger = logging.getLogger(__name__)
@@ -25,42 +26,45 @@ router = APIRouter(prefix="/squad", tags=["squad"])
 # Response Schema
 # ---------------------------------------------------------------------------
 
+
 class SquadPlayerResponse(BaseModel):
     """A single player entry in the squad response."""
-    player_id: int                  # Internal DB id
-    fpl_id: int                     # FPL element id
-    name: str                       # web_name (e.g. "Saka")
+
+    player_id: int  # Internal DB id
+    fpl_id: int  # FPL element id
+    name: str  # web_name (e.g. "Saka")
     first_name: str
     second_name: str
-    team: str                       # Short name, e.g. "ARS"
-    position: str                   # "GKP", "DEF", "MID", or "FWD"
-    price: int                      # Tenths of a million, e.g. 85 = £8.5m
+    team: str  # Short name, e.g. "ARS"
+    position: str  # "GKP", "DEF", "MID", or "FWD"
+    price: int  # Tenths of a million, e.g. 85 = £8.5m
     is_starting: bool
     is_captain: bool
     is_vice: bool
 
+
 class SquadResponse(BaseModel):
     """Top-level squad response."""
-    user_id: int                    # Internal DB user id
-    fpl_entry_id: int               # FPL manager entry id
+
+    user_id: int  # Internal DB user id
+    fpl_entry_id: int  # FPL manager entry id
     gameweek: int
-    squad: List[SquadPlayerResponse]
+    squad: list[SquadPlayerResponse]
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_current_gameweek(client: FPLClient) -> int:
     """
     Determine the current gameweek from bootstrap-static's events list.
     Returns the first event that is 'current', or the highest 'finished' gw as fallback.
     """
-    data = client.get_bootstrap_static()
     # bootstrap-static returns an 'events' key with all GW metadata;
-    # FPLPlayer is the element model — the events list comes from raw JSON.
-    # We call the underlying HTTP client directly here to access 'events'.
-    # NOTE: We re-use the already-fetched data by accessing the raw request.
+    # FPLPlayer is the element model, so we call the underlying HTTP
+    # client directly here to access the raw 'events' list.
     url = f"{client.BASE_URL}/bootstrap-static/"
     resp = client.client.get(url)
     events = resp.json().get("events", [])
@@ -105,7 +109,7 @@ def _fetch_and_persist_squad(
             )
             continue
 
-        # Position 1–11 = starting, 12–15 = bench
+        # Position 1-11 = starting, 12-15 = bench
         is_starting = pick.position <= 11
 
         squad_entry = (
@@ -132,6 +136,7 @@ def _fetch_and_persist_squad(
 # ---------------------------------------------------------------------------
 # Endpoint
 # ---------------------------------------------------------------------------
+
 
 @router.get("/{user_id}", response_model=SquadResponse)
 def get_squad(user_id: int):
@@ -167,7 +172,9 @@ def get_squad(user_id: int):
                     .all()
                 )
             except Exception as exc:
-                logger.error("Live squad fetch failed for fpl_entry_id=%d: %s", user_id, exc)
+                logger.error(
+                    "Live squad fetch failed for fpl_entry_id=%d: %s", user_id, exc
+                )
                 raise HTTPException(
                     status_code=503,
                     detail="Squad not found in database and live FPL fetch failed.",
@@ -176,7 +183,9 @@ def get_squad(user_id: int):
         if not squad_entries:
             raise HTTPException(
                 status_code=404,
-                detail=f"No squad found for FPL entry id {user_id} in gameweek {gameweek}.",
+                detail=(
+                    f"No squad found for FPL entry id {user_id} in gameweek {gameweek}."
+                ),
             )
 
         squad_players = []
