@@ -24,8 +24,24 @@ Per [CLAUDE.md](CLAUDE.md), the repository structure is:
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+ and npm
+- Docker and Docker Compose
 
-### Backend Setup
+### Running with Docker Compose (Recommended for Backend)
+You can run the FastAPI backend, Postgres database, and Redis cache together using Docker Compose:
+1. Navigate to the `infra/` directory:
+   ```bash
+   cd infra
+   ```
+2. Build and start the services:
+   ```bash
+   docker compose up --build
+   ```
+   This will spin up:
+   * **API Service** on `http://localhost:8000` (health check at `http://localhost:8000/health`)
+   * **Postgres Database** on port `5432` (persisted via `postgres_data` volume)
+   * **Redis Cache** on port `6379`
+
+### Local Backend Setup (Alternative)
 1. Navigate to the `backend/` directory:
    ```bash
    cd backend
