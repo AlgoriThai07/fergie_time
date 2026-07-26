@@ -73,6 +73,12 @@ class Player(Base):
     squad_entries: Mapped[list["UserSquad"]] = relationship(
         back_populates="player", cascade="all, delete-orphan"
     )
+    xp_predictions: Mapped[list["XpPrediction"]] = relationship(
+        back_populates="player", cascade="all, delete-orphan"
+    )
+    features: Mapped[list["PlayerFeature"]] = relationship(
+        back_populates="player", cascade="all, delete-orphan"
+    )
 
 
 class Fixture(Base):
@@ -154,10 +160,49 @@ class UserTransferState(Base):
     )
 
 
+class XpPrediction(Base):
+    __tablename__ = "xp_predictions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
+    gameweek: Mapped[int] = mapped_column(index=True)
+    predicted_points: Mapped[float] = mapped_column(Float)
+    model_version: Mapped[str] = mapped_column(String(50), index=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Relationships
+    player: Mapped["Player"] = relationship(back_populates="xp_predictions")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id", "gameweek", "model_version", name="uq_player_gameweek_model"
+        ),
+    )
+
+
+class PlayerFeature(Base):
+    __tablename__ = "player_features"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
+    gameweek: Mapped[int] = mapped_column(index=True)
+    rolling_avg_points: Mapped[float | None] = mapped_column(Float, nullable=True)
+    minutes_trend: Mapped[float | None] = mapped_column(Float, nullable=True)
+    upcoming_fixture_difficulty: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )
+
+    # Relationships
+    player: Mapped["Player"] = relationship(back_populates="features")
+
+    __table_args__ = (
+        UniqueConstraint("player_id", "gameweek", name="uq_player_gameweek_features"),
+    )
+
+
 # ==============================================================================
 # TODOs for Future Sprints (Do not implement schemas yet)
 # ==============================================================================
-# TODO: xp_predictions (Sprint 2 — Point prediction models and predictions storage)
 # TODO: recommendations (Sprint 2 — ILP optimizer recommendations)
 # TODO: recommendation_explanations (Sprint 3 — Grounded explanations
 #       for recommendations)
