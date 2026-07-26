@@ -108,13 +108,14 @@ def optimize_lineup(
     prob = pulp.LpProblem("optimize_lineup", pulp.LpMaximize)
 
     # Binary variable: 1 = player is in starting XI
-    start = {p.player_id: pulp.LpVariable(f"start_{p.player_id}", cat="Binary")
-             for p in squad_15_players}
+    start = {
+        p.player_id: pulp.LpVariable(f"start_{p.player_id}", cat="Binary")
+        for p in squad_15_players
+    }
 
     # Objective: maximise total xP of starting XI
     prob += pulp.lpSum(
-        start[p.player_id] * xp_map.get(p.player_id, 0.0)
-        for p in squad_15_players
+        start[p.player_id] * xp_map.get(p.player_id, 0.0) for p in squad_15_players
     )
 
     # Exactly 11 starters
@@ -124,32 +125,26 @@ def optimize_lineup(
     for pos in ("GKP", "DEF", "MID", "FWD"):
         pos_players = [p for p in squad_15_players if p.position == pos]
         prob += (
-            pulp.lpSum(start[p.player_id] for p in pos_players)
-            >= _LINEUP_POS_MIN[pos]
+            pulp.lpSum(start[p.player_id] for p in pos_players) >= _LINEUP_POS_MIN[pos]
         )
         prob += (
-            pulp.lpSum(start[p.player_id] for p in pos_players)
-            <= _LINEUP_POS_MAX[pos]
+            pulp.lpSum(start[p.player_id] for p in pos_players) <= _LINEUP_POS_MAX[pos]
         )
 
     status = prob.solve(solver)
 
     elapsed = time.monotonic() - t0
-    logger.info("optimize_lineup: solver status=%s, time=%.3fs", pulp.LpStatus[status], elapsed)
+    logger.info(
+        "optimize_lineup: solver status=%s, time=%.3fs", pulp.LpStatus[status], elapsed
+    )
 
     if status != pulp.LpStatusOptimal:
         raise RuntimeError(
             f"ILP infeasible or solver error: status={pulp.LpStatus[status]}"
         )
 
-    starting_xi = [
-        p for p in squad_15_players
-        if pulp.value(start[p.player_id]) > 0.5
-    ]
-    bench = [
-        p for p in squad_15_players
-        if pulp.value(start[p.player_id]) <= 0.5
-    ]
+    starting_xi = [p for p in squad_15_players if pulp.value(start[p.player_id]) > 0.5]
+    bench = [p for p in squad_15_players if pulp.value(start[p.player_id]) <= 0.5]
     # Bench is ordered: GK first (guaranteed), then outfield worst→best xP
     gk_bench = [p for p in bench if p.position == "GKP"]
     outfield_bench = sorted(
@@ -158,8 +153,10 @@ def optimize_lineup(
     )
     bench_ordered = gk_bench + outfield_bench
 
-    counts = {pos: sum(1 for p in starting_xi if p.position == pos)
-              for pos in ("GKP", "DEF", "MID", "FWD")}
+    counts = {
+        pos: sum(1 for p in starting_xi if p.position == pos)
+        for pos in ("GKP", "DEF", "MID", "FWD")
+    }
     formation = f"1-{counts['DEF']}-{counts['MID']}-{counts['FWD']}"
 
     return {
@@ -200,7 +197,8 @@ def optimize_transfers(
     """
     if len(current_squad) != 15:
         raise ValueError(
-            f"optimize_transfers requires exactly 15 current players, got {len(current_squad)}"
+            "optimize_transfers requires exactly 15 current players, "
+            f"got {len(current_squad)}"
         )
 
     solver = _get_solver()
@@ -219,13 +217,14 @@ def optimize_transfers(
     prob = pulp.LpProblem("optimize_transfers", pulp.LpMaximize)
 
     # Binary variable: 1 = player is in the new squad
-    squad = {p.player_id: pulp.LpVariable(f"squad_{p.player_id}", cat="Binary")
-             for p in players}
+    squad = {
+        p.player_id: pulp.LpVariable(f"squad_{p.player_id}", cat="Binary")
+        for p in players
+    }
 
     # Objective: maximise total squad xP
     prob += pulp.lpSum(
-        squad[p.player_id] * xp_map.get(p.player_id, 0.0)
-        for p in players
+        squad[p.player_id] * xp_map.get(p.player_id, 0.0) for p in players
     )
 
     # Exactly 15 players total
@@ -248,9 +247,7 @@ def optimize_transfers(
     # Transfer count: total changes ≤ max_transfers
     # A player "transferred out" is one in current_squad but not in new squad.
     transfers_out_vars = [
-        1 - squad[p.player_id]
-        for p in players
-        if p.player_id in current_ids
+        1 - squad[p.player_id] for p in players if p.player_id in current_ids
     ]
     prob += pulp.lpSum(transfers_out_vars) <= max_transfers
 
@@ -258,7 +255,9 @@ def optimize_transfers(
 
     elapsed = time.monotonic() - t0
     logger.info(
-        "optimize_transfers: solver status=%s, time=%.3fs", pulp.LpStatus[status], elapsed
+        "optimize_transfers: solver status=%s, time=%.3fs",
+        pulp.LpStatus[status],
+        elapsed,
     )
 
     if status != pulp.LpStatusOptimal:

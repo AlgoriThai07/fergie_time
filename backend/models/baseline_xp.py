@@ -2,7 +2,7 @@
 Baseline xP model for FPL player point prediction.
 
 Formula:
-    predicted_points = rolling_avg_points × fixture_difficulty_multiplier
+    predicted_points = rolling_avg_points * fixture_difficulty_multiplier
 
 Fixture difficulty multiplier:
     FDR 1 → 1.30  (easiest fixture)
@@ -31,7 +31,6 @@ Interface contract (CLAUDE.md / fpl-agent-plan.md §C):
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from db.models import GameweekStat, PlayerFeature
 from db.session import get_db_session
@@ -55,7 +54,7 @@ _FDR_MULTIPLIER: dict[int, float] = {
 }
 
 
-def _fdr_multiplier(fdr: Optional[float]) -> float:
+def _fdr_multiplier(fdr: float | None) -> float:
     """Return the fixture-difficulty multiplier for a given FDR value.
 
     FDR is stored as a float average (e.g. 4.5 for a double gameweek), so

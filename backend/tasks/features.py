@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 
 from db.models import Fixture, GameweekStat, Player, PlayerFeature
@@ -8,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(name="tasks.features.compute_player_features")
-def compute_player_features(gameweek: int = None):
+def compute_player_features(gameweek: int | None = None):
     """
     Computes rolling averages and upcoming fixture difficulties for all players,
     and updates or inserts the results into player_features for the given gameweek.
@@ -95,5 +97,7 @@ def compute_player_features(gameweek: int = None):
 
         session.commit()
         logger.info(
-            f"Successfully computed features for {len(players)} players in gameweek {gameweek}"
+            "Successfully computed features for %d players in gameweek %s",
+            len(players),
+            gameweek,
         )

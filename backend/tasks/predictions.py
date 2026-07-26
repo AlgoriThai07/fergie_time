@@ -6,6 +6,9 @@ Idempotency: the unique constraint on (player_id, gameweek, model_version)
 ensures that re-running for the same gameweek overwrites the existing row
 rather than inserting a duplicate.
 """
+
+from __future__ import annotations
+
 import logging
 
 from db.models import Fixture, GameweekStat, Player, XpPrediction
@@ -17,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(name="tasks.predictions.run_baseline_xp_predictions")
-def run_baseline_xp_predictions(gameweek: int = None):
+def run_baseline_xp_predictions(gameweek: int | None = None):
     """
     Runs the baseline xP model for all players and upserts into xp_predictions.
     If *gameweek* is not provided, resolves the upcoming gameweek automatically.
