@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.squad import router as squad_router
+from api.recommendations import router as recommendations_router
 
 # Database and Redis URL environment variables with local defaults
 DATABASE_URL = os.getenv(
@@ -27,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(squad_router)
+app.include_router(recommendations_router)
 
 
 @app.get("/health")

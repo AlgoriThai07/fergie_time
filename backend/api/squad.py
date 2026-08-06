@@ -13,7 +13,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from db.models import Player, Team, User, UserSquad
+from db.models import Player, Team, User, UserSquad, UserTransferState
 from db.session import get_db_session
 from ingestion.fpl_client import FPLClient
 
@@ -97,6 +97,21 @@ def _fetch_and_persist_squad(
         session.flush()
 
     picks_resp = client.get_entry_picks(fpl_entry_id, gameweek)
+
+    # Persist transfer state (bank balance) if present in history
+    if picks_resp.entry_history:
+        transfer_state = (
+            session.query(UserTransferState)
+            .filter_by(user_id=user.id, gameweek=gameweek)
+            .first()
+        )
+        if not transfer_state:
+            transfer_state = UserTransferState(
+                user_id=user.id,
+                gameweek=gameweek,
+            )
+            session.add(transfer_state)
+        transfer_state.bank_balance = picks_resp.entry_history.bank
 
     for pick in picks_resp.picks:
         player = session.query(Player).filter_by(fpl_id=pick.element).first()
