@@ -164,3 +164,4 @@ def test_get_squad_pydantic_schema(mock_session_ctx, mock_gw):
     parsed = SquadResponse.model_validate(resp.json())
     assert len(parsed.squad) == 1
     assert isinstance(parsed.squad[0], SquadPlayerResponse)
+

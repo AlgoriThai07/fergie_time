@@ -50,19 +50,19 @@ def run_baseline_xp_predictions(gameweek: int | None = None):
             MODEL_VERSION,
         )
 
-        players = session.query(Player).all()
+        player_ids = [p.id for p in session.query(Player).all()]
 
     # Call predict() outside the session so it opens its own session per call.
     # This keeps session lifetimes short and avoids expiry issues.
     written = 0
-    for player in players:
-        point_estimate, confidence = predict(player.id, gameweek)
+    for player_id in player_ids:
+        point_estimate, confidence = predict(player_id, gameweek)
 
         with get_db_session() as session:
             prediction = (
                 session.query(XpPrediction)
                 .filter_by(
-                    player_id=player.id,
+                    player_id=player_id,
                     gameweek=gameweek,
                     model_version=MODEL_VERSION,
                 )
@@ -70,7 +70,7 @@ def run_baseline_xp_predictions(gameweek: int | None = None):
             )
             if prediction is None:
                 prediction = XpPrediction(
-                    player_id=player.id,
+                    player_id=player_id,
                     gameweek=gameweek,
                     model_version=MODEL_VERSION,
                 )

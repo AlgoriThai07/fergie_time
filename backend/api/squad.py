@@ -86,6 +86,13 @@ def _fetch_and_persist_squad(
     """
     Fetch picks from FPL API for the given entry/gameweek, upsert the User row,
     and upsert UserSquad rows. Returns the User ORM object.
+
+    NOTE: This uses the public entry/{id}/event/{gw}/picks/ endpoint only.
+    It will 404 for the current gameweek until that gameweek's deadline has
+    passed (FPL doesn't publish live picks pre-deadline). Use
+    scratch/create_mock_squad.py to seed test data pre-season.
+    Authenticated live-team fetching (my-team/) is out of scope until
+    Sprint 5 — see CLAUDE.md.
     """
     client = FPLClient()
 
@@ -146,7 +153,6 @@ def _fetch_and_persist_squad(
 
     session.flush()
     return user
-
 
 # ---------------------------------------------------------------------------
 # Endpoint

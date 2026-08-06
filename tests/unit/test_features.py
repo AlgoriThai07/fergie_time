@@ -1,5 +1,5 @@
 import pytest
-from db.models import Team, Player, Fixture, GameweekStat, PlayerFeature
+from db.models import Team, Player, Fixture, GameweekStat, PlayerFeature, UserSquad, UserTransferState, User, XpPrediction
 from db.session import get_db_session
 from tasks.features import compute_player_features
 
@@ -8,7 +8,11 @@ from tasks.features import compute_player_features
 def clean_db():
     """Clean the database before and after each test."""
     with get_db_session() as session:
+        session.query(XpPrediction).delete()
         session.query(PlayerFeature).delete()
+        session.query(UserSquad).delete()
+        session.query(UserTransferState).delete()
+        session.query(User).delete()
         session.query(GameweekStat).delete()
         session.query(Fixture).delete()
         session.query(Player).delete()
@@ -16,7 +20,11 @@ def clean_db():
         session.commit()
     yield
     with get_db_session() as session:
+        session.query(XpPrediction).delete()
         session.query(PlayerFeature).delete()
+        session.query(UserSquad).delete()
+        session.query(UserTransferState).delete()
+        session.query(User).delete()
         session.query(GameweekStat).delete()
         session.query(Fixture).delete()
         session.query(Player).delete()

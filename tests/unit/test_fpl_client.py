@@ -116,3 +116,62 @@ def test_get_entry_picks():
     assert res.picks[0].element == 1
     assert res.entry_history.bank == 5
     mock_client.get.assert_called_once_with("https://fantasy.premierleague.com/api/entry/12345/event/1/picks/")
+
+
+def test_get_my_team():
+    from ingestion.fpl_client import MyTeamResponse
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "picks": [
+            {
+                "element": 4,
+                "position": 3,
+                "is_captain": True,
+                "is_vice_captain": False
+            }
+        ],
+        "transfers": {
+            "bank": 15,
+            "value": 1005
+        }
+    }
+    mock_client.get.return_value = mock_response
+
+    client = FPLClient(client=mock_client)
+    res = client.get_my_team(12345, "pl_profile=dummy_session")
+
+    assert isinstance(res, MyTeamResponse)
+    assert len(res.picks) == 1
+    assert res.picks[0].element == 4
+    assert res.picks[0].is_vice is False
+    assert res.transfers.bank == 15
+    mock_client.get.assert_called_once_with(
+        "https://fantasy.premierleague.com/api/my-team/12345/",
+        headers={"Cookie": "pl_profile=dummy_session"}
+    )
+
+
+def test_fpl_pick_vice_captain_validator():
+    from ingestion.fpl_client import FPLPick
+    
+    # Test mapping of is_vice_captain to is_vice
+    pick_dict = {
+        "element": 10,
+        "position": 1,
+        "is_captain": False,
+        "is_vice_captain": True
+    }
+    pick = FPLPick.model_validate(pick_dict)
+    assert pick.is_vice is True
+
+    # Test standard is_vice
+    pick_dict_std = {
+        "element": 10,
+        "position": 1,
+        "is_captain": False,
+        "is_vice": True
+    }
+    pick_std = FPLPick.model_validate(pick_dict_std)
+    assert pick_std.is_vice is True
+

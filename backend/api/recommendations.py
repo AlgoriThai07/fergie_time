@@ -50,6 +50,7 @@ class RecommendationsResponse(BaseModel):
 
     user_id: int
     gameweek: int
+    bank_balance: int
     lineup: RecommendedLineup
     transfer: RecommendedTransfer | None
     xp_map: dict[int, float]
@@ -249,6 +250,7 @@ def get_recommendations(user_id: int, gameweek: int, max_transfers: int = 1):
         return RecommendationsResponse(
             user_id=user.id,
             gameweek=gameweek,
+            bank_balance=budget,
             lineup=recommended_lineup,
             transfer=recommended_transfer,
             xp_map=filtered_xp_map,

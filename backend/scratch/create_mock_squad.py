@@ -42,11 +42,34 @@ def seed_mock_squad():
         session.query(UserSquad).filter_by(user_id=user.id, gameweek=GAMEWEEK).delete()
         session.flush()
 
-        # 3. Fetch 15 players from the database to build a squad
-        players = session.query(Player).limit(15).all()
-        if len(players) < 15:
+        # 3. Fetch a valid squad of 15 players ensuring team constraints (max 3 per team)
+        all_players = session.query(Player).all()
+        gkps, defs, mids, fwds = [], [], [], []
+        team_counts = {}
+
+        for p in all_players:
+            count = team_counts.get(p.team_id, 0)
+            if count >= 3:
+                continue
+
+            if p.position == "GKP" and len(gkps) < 2:
+                gkps.append(p)
+                team_counts[p.team_id] = count + 1
+            elif p.position == "DEF" and len(defs) < 5:
+                defs.append(p)
+                team_counts[p.team_id] = count + 1
+            elif p.position == "MID" and len(mids) < 5:
+                mids.append(p)
+                team_counts[p.team_id] = count + 1
+            elif p.position == "FWD" and len(fwds) < 3:
+                fwds.append(p)
+                team_counts[p.team_id] = count + 1
+
+        players = gkps + defs + mids + fwds
+
+        if len(players) < 15 or len(gkps) < 2 or len(defs) < 5 or len(mids) < 5 or len(fwds) < 3:
             print(
-                "Error: Not enough players in the database. "
+                "Error: Not enough players of each position in the database. "
                 "Please run the ingestion task first."
             )
             return
@@ -78,7 +101,7 @@ def seed_mock_squad():
             f"for Gameweek {GAMEWEEK}."
         )
         print(
-            f"You can now test the API endpoint at: http://localhost:8001/squad/{FPL_ENTRY_ID}"
+            f"You can now test the API endpoint at: http://localhost:8000/squad/{FPL_ENTRY_ID}"
         )
 
 
