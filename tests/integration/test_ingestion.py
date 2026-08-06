@@ -1,7 +1,7 @@
 from unittest.mock import patch, MagicMock
 import pytest
 from db.session import get_db_session
-from db.models import Team, Player, Fixture, GameweekStat
+from db.models import Team, Player, Fixture, GameweekStat, UserSquad, UserTransferState, User, PlayerFeature, XpPrediction
 from tasks.ingestion import run_fpl_ingestion
 from ingestion.fpl_client import (
     BootstrapStaticResponse, FPLTeam, FPLPlayer, FPLFixture, FPLFixtureStat, FPLFixtureStatValue
@@ -55,6 +55,11 @@ def test_run_fpl_ingestion_integration(mock_client_class):
     
     # Clean database tables before run
     with get_db_session() as session:
+        session.query(PlayerFeature).delete()
+        session.query(XpPrediction).delete()
+        session.query(UserSquad).delete()
+        session.query(UserTransferState).delete()
+        session.query(User).delete()
         session.query(GameweekStat).delete()
         session.query(Fixture).delete()
         session.query(Player).delete()

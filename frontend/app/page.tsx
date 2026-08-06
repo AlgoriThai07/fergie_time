@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 
 interface SquadPlayer {
   player_id: number;
@@ -25,7 +26,7 @@ interface SquadResponse {
 
 export default function Home() {
   const [fplId, setFplId] = useState<string>("1160158");
-  const [apiPort, setApiPort] = useState<string>("8001");
+  const [apiPort, setApiPort] = useState<string>("8000");
   const [squadData, setSquadData] = useState<SquadResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +83,19 @@ export default function Home() {
         <h1 className="text-3xl font-extrabold text-slate-900 text-center mb-8">
           FergieTime Squad Viewer
         </h1>
+
+        {/* Navigation Bar */}
+        <nav className="bg-white px-6 py-4 rounded-lg shadow-sm border border-slate-200 flex gap-6 mb-8 font-medium text-sm">
+          <Link
+            href="/"
+            className="text-blue-600 border-b-2 border-blue-600 pb-0.5 font-bold"
+          >
+            Squad Viewer
+          </Link>
+          <Link href="/recommendations" className="text-slate-500 hover:text-slate-900 transition-colors">
+            Recommendations
+          </Link>
+        </nav>
 
         {/* Fetch Form */}
         <form

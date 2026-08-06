@@ -1,5 +1,5 @@
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class FPLTeam(BaseModel):
@@ -62,7 +62,15 @@ class FPLPick(BaseModel):
     element: int
     position: int
     is_captain: bool
-    is_vice: bool
+    is_vice: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_vice_captain(cls, data):
+        if isinstance(data, dict):
+            if "is_vice_captain" in data and "is_vice" not in data:
+                data["is_vice"] = data["is_vice_captain"]
+        return data
 
 
 class FPLEntryHistory(BaseModel):
@@ -74,6 +82,16 @@ class FPLEntryHistory(BaseModel):
 class EntryPicksResponse(BaseModel):
     picks: list[FPLPick]
     entry_history: FPLEntryHistory | None = None
+
+
+class MyTeamTransfers(BaseModel):
+    bank: int
+    value: int
+
+
+class MyTeamResponse(BaseModel):
+    picks: list[FPLPick]
+    transfers: MyTeamTransfers | None = None
 
 
 class FPLClient:
@@ -114,3 +132,11 @@ class FPLClient:
         response = self.client.get(url)
         response.raise_for_status()
         return EntryPicksResponse.model_validate(response.json())
+
+    def get_my_team(self, team_id: int, cookie: str) -> MyTeamResponse:
+        """Fetch squad picks and transfers for a manager using their session cookie."""
+        url = f"{self.BASE_URL}/my-team/{team_id}/"
+        headers = {"Cookie": cookie}
+        response = self.client.get(url, headers=headers)
+        response.raise_for_status()
+        return MyTeamResponse.model_validate(response.json())

@@ -76,4 +76,4 @@ No chip logic (wildcard/bench boost/free hit/triple captain), no multi-gameweek 
 
 ## Current phase
 
-Sprint 1: foundations — repo scaffolding, DB schema, read-only FPL ingestion, basic dashboard squad view, CI. See `docs/sprint-1-tasks.md` for the broken-down task list.
+Sprint 2: baseline predictions and optimizer — player feature transform, baseline xP model (rolling average x fixture difficulty), first ILP optimizer (short-term only, no transfer-cost logic yet — that's Sprint 3), recommendations API + dashboard page. See `docs/sprint-2-tasks.md` for the broken-down task list. Sprint 1 (repo scaffolding, DB schema, read-only ingestion, basic squad dashboard, CI) is complete.

@@ -13,7 +13,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from db.models import Player, Team, User, UserSquad
+from db.models import Player, Team, User, UserSquad, UserTransferState
 from db.session import get_db_session
 from ingestion.fpl_client import FPLClient
 
@@ -86,6 +86,13 @@ def _fetch_and_persist_squad(
     """
     Fetch picks from FPL API for the given entry/gameweek, upsert the User row,
     and upsert UserSquad rows. Returns the User ORM object.
+
+    NOTE: This uses the public entry/{id}/event/{gw}/picks/ endpoint only.
+    It will 404 for the current gameweek until that gameweek's deadline has
+    passed (FPL doesn't publish live picks pre-deadline). Use
+    scratch/create_mock_squad.py to seed test data pre-season.
+    Authenticated live-team fetching (my-team/) is out of scope until
+    Sprint 5 — see CLAUDE.md.
     """
     client = FPLClient()
 
@@ -97,6 +104,21 @@ def _fetch_and_persist_squad(
         session.flush()
 
     picks_resp = client.get_entry_picks(fpl_entry_id, gameweek)
+
+    # Persist transfer state (bank balance) if present in history
+    if picks_resp.entry_history:
+        transfer_state = (
+            session.query(UserTransferState)
+            .filter_by(user_id=user.id, gameweek=gameweek)
+            .first()
+        )
+        if not transfer_state:
+            transfer_state = UserTransferState(
+                user_id=user.id,
+                gameweek=gameweek,
+            )
+            session.add(transfer_state)
+        transfer_state.bank_balance = picks_resp.entry_history.bank
 
     for pick in picks_resp.picks:
         player = session.query(Player).filter_by(fpl_id=pick.element).first()

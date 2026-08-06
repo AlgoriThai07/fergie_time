@@ -59,3 +59,13 @@ out/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Docs
+sprint-1-tasks.md
+sprint-2-tasks.md
+sprint-3-tasks.md
+sprint-4-tasks.md
+sprint-5-tasks.md
+sprint-6-tasks.md
+sprint-7-tasks.md
+fpl-agent-plan.md
