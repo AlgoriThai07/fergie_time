@@ -1,10 +1,11 @@
 import logging
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from db.models import Player, Team, User, UserSquad, UserTransferState, XpPrediction
-from db.session import get_db_session
 from api.squad import _fetch_and_persist_squad
+from db.models import Player, User, UserSquad, UserTransferState, XpPrediction
+from db.session import get_db_session
 from optimization.optimizer import PlayerData, optimize_lineup, optimize_transfers
 
 logger = logging.getLogger(__name__)
@@ -102,13 +103,18 @@ def get_recommendations(user_id: int, gameweek: int, max_transfers: int = 1):
                 )
                 raise HTTPException(
                     status_code=503,
-                    detail=f"User squad not found for gameweek {squad_gw} and live FPL fetch failed.",
+                    detail=(
+                        f"User squad not found for gameweek {squad_gw} "
+                        "and live FPL fetch failed."
+                    ),
                 ) from exc
 
         if not squad_entries:
             raise HTTPException(
                 status_code=404,
-                detail=f"No squad found for FPL entry id {user_id} in gameweek {squad_gw}.",
+                detail=(
+                    f"No squad found for FPL entry id {user_id} in gameweek {squad_gw}."
+                ),
             )
 
         # Query xP predictions for target gameweek (baseline model)
@@ -121,7 +127,10 @@ def get_recommendations(user_id: int, gameweek: int, max_transfers: int = 1):
         if not predictions:
             raise HTTPException(
                 status_code=409,
-                detail=f"xP predictions are missing for gameweek {gameweek}. Please run the prediction tasks first.",
+                detail=(
+                    f"xP predictions are missing for gameweek {gameweek}. "
+                    "Please run the prediction tasks first."
+                ),
             )
 
         # Create map of player_id -> predicted_points
@@ -229,8 +238,12 @@ def get_recommendations(user_id: int, gameweek: int, max_transfers: int = 1):
             tout_pd = transfer_result["transfers_out"][0]
 
             # Compute xP gain
-            current_squad_xp = sum(xp_map.get(p.player_id, 0.0) for p in squad_players_data)
-            new_squad_xp = sum(xp_map.get(p.player_id, 0.0) for p in transfer_result["new_squad"])
+            current_squad_xp = sum(
+                xp_map.get(p.player_id, 0.0) for p in squad_players_data
+            )
+            new_squad_xp = sum(
+                xp_map.get(p.player_id, 0.0) for p in transfer_result["new_squad"]
+            )
             xp_gain = new_squad_xp - current_squad_xp
 
             recommended_transfer = RecommendedTransfer(
@@ -239,7 +252,8 @@ def get_recommendations(user_id: int, gameweek: int, max_transfers: int = 1):
                 xp_gain=round(xp_gain, 2),
             )
 
-        # Filter the underlying xp_map to only include squad players to keep response size concise
+        # Filter the underlying xp_map to only include squad players
+        # to keep response size concise
         squad_player_ids = {pd.player_id for pd in squad_players_data}
         if recommended_transfer:
             squad_player_ids.add(recommended_transfer.transfer_in.player_id)

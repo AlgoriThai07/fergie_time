@@ -1,8 +1,13 @@
 import os
 from contextlib import contextmanager
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 # Load environment variables from .env file if it exists
-env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+env_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+)
 if os.path.exists(env_path):
     with open(env_path) as f:
         for line in f:
@@ -11,9 +16,6 @@ if os.path.exists(env_path):
                 key = key.strip()
                 val = val.strip().strip("\"'")
                 os.environ[key] = val
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 

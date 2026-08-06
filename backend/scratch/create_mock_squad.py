@@ -42,7 +42,8 @@ def seed_mock_squad():
         session.query(UserSquad).filter_by(user_id=user.id, gameweek=GAMEWEEK).delete()
         session.flush()
 
-        # 3. Fetch a valid squad of 15 players ensuring team constraints (max 3 per team)
+        # 3. Fetch a valid squad of 15 players ensuring team constraints
+        # (max 3 per team)
         all_players = session.query(Player).all()
         gkps, defs, mids, fwds = [], [], [], []
         team_counts = {}
@@ -67,7 +68,13 @@ def seed_mock_squad():
 
         players = gkps + defs + mids + fwds
 
-        if len(players) < 15 or len(gkps) < 2 or len(defs) < 5 or len(mids) < 5 or len(fwds) < 3:
+        if (
+            len(players) < 15
+            or len(gkps) < 2
+            or len(defs) < 5
+            or len(mids) < 5
+            or len(fwds) < 3
+        ):
             print(
                 "Error: Not enough players of each position in the database. "
                 "Please run the ingestion task first."
